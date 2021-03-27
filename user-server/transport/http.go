@@ -8,7 +8,7 @@ import (
 	"github.com/go-kit/kit/transport"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
-	"micro-go-course/user-server/endpoint"
+	"github.com/yunfeiyang1916/micro-go-course/user-server/endpoint"
 	"net/http"
 	"os"
 )

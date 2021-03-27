@@ -3,7 +3,7 @@ package endpoint
 import (
 	"context"
 	"github.com/go-kit/kit/endpoint"
-	"micro-go-course/user-server/service"
+	"github.com/yunfeiyang1916/micro-go-course/user-server/service"
 )
 
 // 用户终端，负责接收请求，处理请求，并返回结果。可以添加熔断、日志、限流、负载均衡等能力

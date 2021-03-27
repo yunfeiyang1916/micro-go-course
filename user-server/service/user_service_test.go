@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"micro-go-course/user-server/dao"
-	"micro-go-course/user-server/redis"
+	"github.com/yunfeiyang1916/micro-go-course/user-server/dao"
+	"github.com/yunfeiyang1916/micro-go-course/user-server/redis"
 	"testing"
 )
 
