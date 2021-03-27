@@ -15,6 +15,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 )
 
 // 依次组建 service、endpoint 和 transport，并启动 Web 服务器
@@ -24,13 +25,17 @@ func main() {
 		servicePort = flag.Int("service.port", 10086, "service port")
 	)
 	flag.Parse()
+
+	// 使用k8s部署时，延时启动，等待 MySQL 和 Redis 准备好
+	time.Sleep(10 * time.Second)
+
 	ctx := context.Background()
 	errChan := make(chan error)
-	err := dao.InitMysql("127.0.0.1", "3306", "root", "root123456", "user")
+	err := dao.InitMysql("localhost", "3306", "root", "root123456", "user")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = redis.InitRedis("127.0.0.1", "6379", "")
+	err = redis.InitRedis("localhost", "6379", "")
 	if err != nil {
 		log.Fatal(err)
 	}
