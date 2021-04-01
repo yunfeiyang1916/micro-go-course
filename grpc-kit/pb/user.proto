@@ -1,0 +1,18 @@
+syntax = "proto3";
+package pb;
+
+service UserService{
+  // 校验密码
+  rpc CheckPassword(LoginReq) returns (LoginResp){}
+}
+// 登录请求
+message LoginReq {
+  string Username = 1;
+  string Password = 2;
+}
+
+// 登录响应
+message LoginResp{
+  string Ret = 1;
+  string err = 2;
+}
