@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	servicePort := flag.Int("service.port", 10086, "service port")
+	servicePort := flag.Int("service.port", 10087, "service port")
 
 	flag.Parse()
 
