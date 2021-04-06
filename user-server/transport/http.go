@@ -4,17 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"os"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/transport"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	"github.com/yunfeiyang1916/micro-go-course/user-server/endpoint"
-	"net/http"
-	"os"
 )
 
 // 传输层，对外暴露项目的服务接口
-
 var (
 	ErrorBadRequest = errors.New("invalid request parameter")
 )
