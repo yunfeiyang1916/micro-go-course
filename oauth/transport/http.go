@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/transport"
 	kithttp "github.com/go-kit/kit/transport/http"
@@ -11,7 +13,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/yunfeiyang1916/micro-go-course/oauth/endpoint"
 	"github.com/yunfeiyang1916/micro-go-course/oauth/service"
-	"net/http"
 )
 
 // 传输层，对外暴露项目的服务接口
@@ -39,6 +40,11 @@ func MakeHttpHandler(ctx context.Context, endpoints endpoint.OAuth2Endpoints, to
 		kithttp.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
 		kithttp.ServerErrorEncoder(encodeError),
 	}
+	oauth2AuthorizationOptions := []kithttp.ServerOption{
+		kithttp.ServerBefore(makeOAuth2AuthorizationContext(tokenService, logger)),
+		kithttp.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
+		kithttp.ServerErrorEncoder(encodeError),
+	}
 	// 用于客户端携带用户凭证请求访问令牌
 	r.Methods("POST").Path("/oauth/token").Handler(kithttp.NewServer(endpoints.TokenEndpoint, decodeTokenRequest, encodeJsonResponse, clientAuthorizationOptions...))
 
@@ -46,12 +52,10 @@ func MakeHttpHandler(ctx context.Context, endpoints endpoint.OAuth2Endpoints, to
 	r.Methods("POST").Path("/oauth/check_token").Handler(kithttp.NewServer(endpoints.TokenEndpoint, decodeCheckTokenRequest, encodeJsonResponse, clientAuthorizationOptions...))
 
 	// create health check handler
-	r.Methods("GET").Path("/health").Handler(kithttp.NewServer(
-		endpoints.HealthCheckEndpoint,
-		decodeHealthCheckRequest,
-		encodeJsonResponse,
-		options...,
-	))
+	r.Methods("GET").Path("/health").Handler(kithttp.NewServer(endpoints.HealthCheckEndpoint, decodeHealthCheckRequest, encodeJsonResponse, options...))
+	r.Methods("Get").Path("/index").Handler(kithttp.NewServer(endpoints.SampleEndpoint, decodeIndexRequest, encodeJsonResponse, oauth2AuthorizationOptions...))
+	r.Methods("Get").Path("/sample").Handler(kithttp.NewServer(endpoints.SampleEndpoint, decodeSampleRequest, encodeJsonResponse, oauth2AuthorizationOptions...))
+	r.Methods("Get").Path("/admin").Handler(kithttp.NewServer(endpoints.SampleEndpoint, decodeAdminRequest, encodeJsonResponse, oauth2AuthorizationOptions...))
 	return r
 }
 func makeOAuth2AuthorizationContext(tokenService service.TokenService, logger log.Logger) kithttp.RequestFunc {
@@ -84,6 +88,18 @@ func makeClientAuthorizationContext(clientDetailsService service.ClientDetailsSe
 		}
 		return context.WithValue(ctx, endpoint.OAuth2ErrorKey, ErrInvalidClientRequest)
 	}
+}
+func decodeIndexRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	return &endpoint.IndexRequest{}, nil
+
+}
+
+func decodeSampleRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	return &endpoint.SampleRequest{}, nil
+}
+
+func decodeAdminRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	return &endpoint.AdminRequest{}, nil
 }
 
 // 解码令牌请求

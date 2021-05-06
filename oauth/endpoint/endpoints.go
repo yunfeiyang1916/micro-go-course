@@ -3,10 +3,11 @@ package endpoint
 import (
 	"context"
 	"errors"
+	"net/http"
+
 	"github.com/go-kit/kit/log"
 	"github.com/yunfeiyang1916/micro-go-course/oauth/model"
 	"github.com/yunfeiyang1916/micro-go-course/oauth/service"
-	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 )
@@ -19,6 +20,12 @@ type OAuth2Endpoints struct {
 	CheckTokenEndpoint endpoint.Endpoint
 	// 健康检测终端
 	HealthCheckEndpoint endpoint.Endpoint
+	// 首页终端
+	IndexEndpoint endpoint.Endpoint
+	// 示例终端
+	SampleEndpoint endpoint.Endpoint
+	// admin终端
+	AdminEndpoint endpoint.Endpoint
 }
 
 // 请求上下文使用的key
@@ -67,6 +74,30 @@ type HealthResponse struct {
 	Status bool `json:"status"`
 }
 
+type IndexRequest struct {
+}
+
+type IndexResponse struct {
+	Result string `json:"result"`
+	Error  string `json:"error"`
+}
+
+type SampleRequest struct {
+}
+
+type SampleResponse struct {
+	Result string `json:"result"`
+	Error  string `json:"error"`
+}
+
+type AdminRequest struct {
+}
+
+type AdminResponse struct {
+	Result string `json:"result"`
+	Error  string `json:"error"`
+}
+
 // MakeHealthCheckEndpoint 创建健康检查Endpoint
 func MakeHealthCheckEndpoint(svc service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
@@ -77,7 +108,7 @@ func MakeHealthCheckEndpoint(svc service.Service) endpoint.Endpoint {
 	}
 }
 
-// 创建认证中间件
+// 创建客户端认证中间件
 func MakeClientAuthorizationMiddleware(logger log.Logger) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
@@ -92,7 +123,24 @@ func MakeClientAuthorizationMiddleware(logger log.Logger) endpoint.Middleware {
 	}
 }
 
-// 创建验权中间件
+// 创建认证中间件，需要有令牌访问
+func MakeOAuth2AuthorizationMiddleware(logger log.Logger) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+
+			if err, ok := ctx.Value(OAuth2ErrorKey).(error); ok {
+				return nil, err
+			}
+			if _, ok := ctx.Value(OAuth2DetailsKey).(*model.OAuth2Details); !ok {
+				return nil, ErrInvalidUserRequest
+			}
+			return next(ctx, request)
+		}
+	}
+}
+
+// 创建验权中间件，需要验证权限
 func MakeAuthorityAuthorizationMiddleware(authority string, logger log.Logger) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
@@ -142,6 +190,36 @@ func MakeCheckTokenEndpoint(svc service.TokenService) endpoint.Endpoint {
 		return CheckTokenResponse{
 			OAuthDetails: tokenDetails,
 			Error:        errString,
+		}, nil
+	}
+}
+
+// 创建首页终端
+func MakeIndexEndpoint(svc service.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		result := svc.Index()
+		return &IndexResponse{
+			Result: result,
+		}, nil
+	}
+}
+
+// 创建简单示例终端
+func MakeSampleEndpoint(svc service.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		result := svc.Sample(ctx.Value(OAuth2DetailsKey).(*model.OAuth2Details).User.Username)
+		return &SampleResponse{
+			Result: result,
+		}, nil
+	}
+}
+
+// 创建Admin终端
+func MakeAdminEndpoint(svc service.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		result := svc.Admin(ctx.Value(OAuth2DetailsKey).(*model.OAuth2Details).User.Username)
+		return &AdminResponse{
+			Result: result,
 		}, nil
 	}
 }

@@ -4,16 +4,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/yunfeiyang1916/micro-go-course/oauth/config"
-	"github.com/yunfeiyang1916/micro-go-course/oauth/endpoint"
-	"github.com/yunfeiyang1916/micro-go-course/oauth/model"
-	"github.com/yunfeiyang1916/micro-go-course/oauth/service"
-	"github.com/yunfeiyang1916/micro-go-course/oauth/transport"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+
+	"github.com/yunfeiyang1916/micro-go-course/oauth/config"
+	"github.com/yunfeiyang1916/micro-go-course/oauth/endpoint"
+	"github.com/yunfeiyang1916/micro-go-course/oauth/model"
+	"github.com/yunfeiyang1916/micro-go-course/oauth/service"
+	"github.com/yunfeiyang1916/micro-go-course/oauth/transport"
 )
 
 func main() {
@@ -81,11 +82,18 @@ func main() {
 	srv = service.NewCommonService()
 	//创建健康检查的Endpoint
 	healthEndpoint := endpoint.MakeHealthCheckEndpoint(srv)
-
+	indexEndpoint := endpoint.MakeIndexEndpoint(srv)
+	sampleEndpoint := endpoint.MakeSampleEndpoint(srv)
+	sampleEndpoint = endpoint.MakeOAuth2AuthorizationMiddleware(config.KitLogger)(sampleEndpoint)
+	adminEndpoint := endpoint.MakeAdminEndpoint(srv)
+	adminEndpoint = endpoint.MakeAuthorityAuthorizationMiddleware("Admin", config.KitLogger)(adminEndpoint)
 	endpts := endpoint.OAuth2Endpoints{
 		TokenEndpoint:       tokenEndpoint,
 		CheckTokenEndpoint:  checkTokenEndpoint,
 		HealthCheckEndpoint: healthEndpoint,
+		IndexEndpoint:       indexEndpoint,
+		SampleEndpoint:      sampleEndpoint,
+		AdminEndpoint:       adminEndpoint,
 	}
 
 	// 创建http.Handler

@@ -16,9 +16,9 @@ const (
 
 // 结点
 type node struct {
-	// key
+	// 节点key
 	nodeKey string
-	// 值
+	// 虚拟结点哈希值
 	spotValue uint32
 }
 
@@ -36,7 +36,7 @@ type HashRing struct {
 	virualSpots int
 	// 结点集合
 	nodes nodesArray
-	// 权重
+	// 权重配置，以服务地址为键，权重为值的map
 	weights map[string]int
 	mu      sync.RWMutex
 }
@@ -51,7 +51,7 @@ func NewHashRing() *HashRing {
 	return h
 }
 
-// 批量添加结点
+// 批量添加服务结点
 func (h *HashRing) AddNodes(nodeWeight map[string]int) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -61,7 +61,7 @@ func (h *HashRing) AddNodes(nodeWeight map[string]int) {
 	h.generate()
 }
 
-// 添加结点
+// 添加服务结点
 func (h *HashRing) AddNode(nodeKey string, weight int) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -69,7 +69,7 @@ func (h *HashRing) AddNode(nodeKey string, weight int) {
 	h.generate()
 }
 
-// 移除结点
+// 移除服务结点
 func (h *HashRing) RemoveNode(nodeKey string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -77,7 +77,7 @@ func (h *HashRing) RemoveNode(nodeKey string) {
 	h.generate()
 }
 
-// 更新结点
+// 更新服务结点
 func (h *HashRing) UpdateNode(nodeKey string, weight int) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -117,7 +117,7 @@ func genValue(bs []byte) uint32 {
 	return v
 }
 
-// 获取结点的key
+// 获取指定值所在环中的服务节点
 func (h *HashRing) GetNode(s string) string {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
