@@ -4,7 +4,7 @@ package model
 type ClientDetails struct {
 	// 客户端标识
 	ClientId string
-	// 客户端密钥
+	// 客户端的密钥
 	ClientSecret string
 	// 访问令牌有效时间，秒
 	AccessTokenValiditySeconds int
